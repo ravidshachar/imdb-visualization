@@ -6,10 +6,11 @@ import pandas as pd
 
 HEADERS = {"Accept-Language": "en-US, en;q=0.5"}
 NUMBER_OF_REQUESTS = 3
+RESULTS_IN_A_PAGE = 50
 
-def get_movie_dataframe(pages_number=4,years=[str(i) for i in range(2000,2018)]):
+def get_movie_dataframe(pages_number=5,years=[str(i) for i in range(2000,2018)]):
 	record_lists = []
-	pages = [str(i) for i in range(1,pages_number)]
+	pages = [i for i in range(1,pages_number)]
 
 	# Preparing the monitoring of the loop
 	start_time = time()
@@ -22,8 +23,10 @@ def get_movie_dataframe(pages_number=4,years=[str(i) for i in range(2000,2018)])
 		for page in pages:
 
 			# Make a get request
+			current_start = str((RESULTS_IN_A_PAGE*(page-1))+1)
 			response = requests.get('https://www.imdb.com/search/title?title_type=feature,tv_movie&release_date=' + year +
-			'&sort=num_votes,desc&page=' + page, headers = HEADERS)
+			'&sort=num_votes,desc&start=' + current_start 
+			+ '&page=' + str(page), headers = HEADERS)
 
 			# Pause the loop so that imdb won't block you
 			sleep(randint(4,8))
@@ -54,24 +57,35 @@ def get_movie_dataframe(pages_number=4,years=[str(i) for i in range(2000,2018)])
 
 					# Scrape the name
 					name = container.h3.a.text
-
+					
 					# Scrape the year
-					movie_year = container.h3.find('span', class_ = 'lister-item-year').text
+					object_year = container.h3.find('span', class_ = 'lister-item-year').text
+					movie_year = int(object_year[object_year.rfind("(") + 1:-1])
 
 					# Scrape the IMDB rating
 					imdb = float(container.strong.text)
 
 					# Scrape the Metascore
 					m_score = container.find('span', class_ = 'metascore').text
-
+					m_score = int(m_score)
+					
 					# Scrape the number of votes
-					vote = container.find('span', attrs = {'name':'nv'})['data-value']
+					votes_and_gross = container.find_all('span', attrs = {'name':'nv'})
+					vote,gross = [x['data-value'] for x in votes_and_gross 
+									if len(votes_and_gross) == 2] or (votes_and_gross[0]['data-value'],None)
+					vote = int(vote)
 					
 					director = container.find('p', class_ = '').find_all('a')[0].text
 					actors = [x.text for x in container.find('p', class_ = '').find_all('a')[1:]]
 					
-					additional_information = container.find('p', class_ = 'text-muted').find_all('span')[::2]
-					certificate,length,genre = [x.text.replace("\n","") for x in additional_information]
+					additional_information = container.find('p', class_ = 'text-muted')#.find_all('span')
+					additional_information = (additional_information.find('span', class_ = 'certificate'),
+					additional_information.find('span', class_ = 'runtime'),
+					additional_information.find('span', class_ = 'genre'))
+					certificate,length,genre = [x.text if x else None for x in additional_information ]
+					
+					length = int(length.replace(" min",""))
+					
 					
 					#genre is a list
 					genre = genre.strip().split(",")
@@ -81,8 +95,10 @@ def get_movie_dataframe(pages_number=4,years=[str(i) for i in range(2000,2018)])
 					
 		if requests_num > NUMBER_OF_REQUESTS:
 			break
-	df = pd.DataFrame(record_lists,columns=["name","year","imdb_rating","metascore","votes","director","actors","certificate","length","genre"])
+	df = pd.DataFrame(record_lists,columns=["name","year","rating","metascore","votes","director","actors","certificate","length","genre"])
 	return df
 	
 if __name__ == "__main__":
-	print(get_movie_dataframe().head().to_string())
+	df = get_movie_dataframe()
+	print(df.head().to_string())
+	print(df.dtypes)
