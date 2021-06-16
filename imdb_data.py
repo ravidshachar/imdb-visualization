@@ -79,4 +79,4 @@ def get_movie_dataframe(pages_number=4,years=[str(i) for i in range(2000,2018)])
 	return df
 	
 if __name__ == "__main__":
-	print(get_movie_dataframe())
+	print(get_movie_dataframe().head().to_string())
