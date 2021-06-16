@@ -6,30 +6,29 @@ from neomodel import (StructuredNode, StringProperty, IntegerProperty, FloatProp
 config.DATABASE_URL = os.environ["NEO4J_BOLT_URL"]
 
 class ActedIn(StructuredRel):
-    #uid = UniqueIdProperty()
     role = StringProperty()
 
 class Directed(StructuredRel):
-    #uid = UniqueIdProperty()
     pass
     
 class Created(StructuredRel):
-    #uid = UniqueIdProperty()
     pass
 
 class Person(StructuredNode):
-    #uid = UniqueIdProperty()
     name = StringProperty(required=True, unique_index=True)
 
 class Actor(Person):
-    movies = RelationshipTo("Movie", "ACTED_IN", model=ActedIn)
+    acted_in_movies = RelationshipTo("Movie", "ACTED_IN", model=ActedIn)
     shows = RelationshipTo("Show", "ACTED_IN", model=ActedIn)
 
 class Director(Person):
-    movies = RelationshipTo("Movie", "DIRECTED", model=Directed)
+    directed_movies = RelationshipTo("Movie", "DIRECTED", model=Directed)
 
 class Creator(Person):
     shows = RelationshipTo("Show", "CREATED", model=Created)
+
+class ActorAndDirector(Actor, Director):
+    pass
 
 class Title(StructuredNode):
     #uid = UniqueIdProperty()
