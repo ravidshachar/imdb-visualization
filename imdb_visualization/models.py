@@ -35,12 +35,15 @@ class Title(StructuredNode):
     #uid = UniqueIdProperty()
     name = StringProperty(required=True)
     rating = FloatProperty()
-    metascore = FloatProperty()
+    metascore = IntegerProperty()
     votes = IntegerProperty()
+    actors = RelationshipFrom("Actor", "ACTED_IN", model=ActedIn)
 
 class Movie(Title):
     year = IntegerProperty(required=True)
+    director = RelationshipFrom("Director", "DIRECTED", model=Directed)
 
 class Show(Title):
     year_start = IntegerProperty(required=True)
     year_end = IntegerProperty()
+    creator = RelationshipFrom("Director", "CREATED", model=Created)
