@@ -70,12 +70,18 @@ def get_movie_dataframe(pages_number=4,years=[str(i) for i in range(2000,2018)])
 					director = container.find('p', class_ = '').find_all('a')[0].text
 					actors = [x.text for x in container.find('p', class_ = '').find_all('a')[1:]]
 					
-					record_lists.append([name,movie_year,imdb,m_score,vote,director,actors])
-
-					#star = container.find('p')
+					additional_information = container.find('p', class_ = 'text-muted').find_all('span')[::2]
+					certificate,length,genre = [x.text.replace("\n","") for x in additional_information]
+					
+					#genre is a list
+					genre = genre.strip().split(",")
+					
+					#prepre for data frame
+					record_lists.append([name,movie_year,imdb,m_score,vote,director,actors,certificate,length,genre])
+					
 		if requests_num > NUMBER_OF_REQUESTS:
 			break
-	df = pd.DataFrame(record_lists,columns=["name","year","imdb_rating","metascore","votes","director","actors"])
+	df = pd.DataFrame(record_lists,columns=["name","year","imdb_rating","metascore","votes","director","actors","certificate","length","genre"])
 	return df
 	
 if __name__ == "__main__":
