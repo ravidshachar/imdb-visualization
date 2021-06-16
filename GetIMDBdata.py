@@ -3,12 +3,13 @@ from time import time,sleep
 from random import randint
 from IPython.core.display import clear_output
 from requests import get
+import pandas as pd
 
 HEADERS = {"Accept-Language": "en-US, en;q=0.5"}
 NUMBER_OF_REQUESTS = 3
 
-
-def get_movie_dataframe(pages_number,year_url):
+def get_movie_dataframe(pages_number,years_url):
+	record_lists = []
 	pages = [str(i) for i in range(1,pages_number)]
 	
 	# Redeclaring the lists to store data in
@@ -81,15 +82,24 @@ def get_movie_dataframe(pages_number,year_url):
 					vote = container.find('span', attrs = {'name':'nv'})['data-value']
 					votes.append(int(vote))
 					
+					director = container.find('p', class_ = '').find_all('a')[0].text
+					star = [x.text for x in container.find('p', class_ = '').find_all('a')[1:]]
+					
 					directors.append(director)
 					stars.append(star)
+					
+					record_lists.append([name,year,imdb,m_score,vote,director,star])
 
 					#star = container.find('p')
 		if requests > NUMBER_OF_REQUESTS:
 			break
-	print(stars)
-	
-def main:
+	df = pd.DataFrame(record_lists,columns=["name","year","imdb_rating","metascore","votes","director","actors"])
+	print(df)
+	return df
+
+def main():
 	pages_number = 5
 	years_url = [str(i) for i in range(2000,2018)]
-	get_movie_dataframe(pages_number,year_url)
+	get_movie_dataframe(pages_number,years_url)
+	
+main()
