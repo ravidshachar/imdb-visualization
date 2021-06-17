@@ -11,12 +11,8 @@ RESULTS_IN_A_PAGE = 50
 def get_movie_dataframe(pages_number=2,years=[str(i) for i in range(2000,2002)]):
 	record_lists = []
 	pages = [i for i in range(1,pages_number+1)]
-
-	# Preparing the monitoring of the loop
 	start_time = time()
 	requests_num = 0
-
-	# For every year in the interval 2000-2017
 	for year in years:
 
 		# For every page in the interval 1-4
@@ -39,11 +35,6 @@ def get_movie_dataframe(pages_number=2,years=[str(i) for i in range(2000,2002)])
 			# Throw a warning for non-200 status codes
 			if response.status_code != 200:
 				print('Request: {}; Status code: {}'.format(requests_num, response.status_code))
-
-			# Break the loop if the number of requests is greater than expected
-			#if requests_num > NUMBER_OF_REQUESTS:
-			#	print('Number of requests was greater than expected.')
-			#	break
 			
 			# Parse the content of the request with BeautifulSoup
 			page_html = BeautifulSoup(response.text, 'html.parser')
@@ -69,16 +60,18 @@ def get_movie_dataframe(pages_number=2,years=[str(i) for i in range(2000,2002)])
 					m_score = container.find('span', class_ = 'metascore').text
 					m_score = int(m_score)
 					
-					# Scrape the number of votes
+					# Scrape the number of votes and gross
 					votes_and_gross = container.find_all('span', attrs = {'name':'nv'})
 					vote,gross = [x['data-value'] for x in votes_and_gross 
 									if len(votes_and_gross) == 2] or (votes_and_gross[0]['data-value'],None)
 					vote = int(vote)
 					
+					#scrape director and actors
 					director = container.find('p', class_ = '').find_all('a')[0].text
 					actors = [x.text for x in container.find('p', class_ = '').find_all('a')[1:]]
 					
-					additional_information = container.find('p', class_ = 'text-muted')#.find_all('span')
+					#scrape certificate, runtime and genre
+					additional_information = container.find('p', class_ = 'text-muted')
 					additional_information = (additional_information.find('span', class_ = 'certificate'),
 					additional_information.find('span', class_ = 'runtime'),
 					additional_information.find('span', class_ = 'genre'))
@@ -92,9 +85,6 @@ def get_movie_dataframe(pages_number=2,years=[str(i) for i in range(2000,2002)])
 					
 					#prepre for data frame
 					record_lists.append([name,movie_year,imdb,m_score,vote,director,actors,certificate,length,genre])
-					
-		#if requests_num > NUMBER_OF_REQUESTS:
-		#	break
 	df = pd.DataFrame(record_lists,columns=["name","year","rating","metascore","votes","director","actors","certificate","length","genre"])
 	return df
 	
