@@ -64,20 +64,22 @@ def get_nodes_by_years(year_start, year_end):
     df.set_index("id", inplace=True)
     return df
 
-def get_top_actors(top_num=10):
-    results, _ = db.cypher_query("""MATCH (a:Actor)-[rs:ACTED_IN]->(m) 
+def get_top_actors(year_start, year_end, top_num=10):
+    results, _ = db.cypher_query("""MATCH (a:Actor)-[rs:ACTED_IN]->(m)
+                                    WHERE m.year >= {} AND m.year <= {}
                                     WITH a, count(m) AS movies_num, avg(m.rating) AS avg_rating, avg(m.metascore) AS avg_metascore
                                     RETURN id(a), a.name, movies_num, avg_rating, avg_metascore
-                                    ORDER BY movies_num DESC LIMIT {}""".format(top_num))
+                                    ORDER BY movies_num DESC LIMIT {}""".format(year_start, year_end, top_num))
     df = pd.DataFrame(results, columns=["id", "name", "movies_num", "avg_movie_rating", "avg_metascore"])
     df.set_index("id", inplace=True)
     return df
 
-def get_top_directors(top_num=10):
-    results, _ = db.cypher_query("""MATCH (d:Director)-[rs:DIRECTED]->(m) 
+def get_top_directors(year_start, year_end, top_num=10):
+    results, _ = db.cypher_query("""MATCH (d:Director)-[rs:DIRECTED]->(m)
+                                    WHERE m.year >= {} AND m.year <= {}
                                     WITH d, count(m) AS movies_num, avg(m.rating) AS avg_rating, avg(m.metascore) AS avg_metascore
                                     RETURN id(d), d.name, movies_num, avg_rating, avg_metascore
-                                    ORDER BY movies_num DESC LIMIT {}""".format(top_num))
+                                    ORDER BY movies_num DESC LIMIT {}""".format(year_start, year_end, top_num))
     df = pd.DataFrame(results, columns=["id", "name", "movies_num", "avg_movie_rating", "avg_metascore"])
     df.set_index("id", inplace=True)
     return df
