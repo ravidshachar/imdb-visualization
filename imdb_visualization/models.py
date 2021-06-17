@@ -1,5 +1,5 @@
 import os
-from neomodel import (StructuredNode, StringProperty, IntegerProperty, FloatProperty,
+from neomodel import (StructuredNode, StringProperty, IntegerProperty, FloatProperty, ArrayProperty,
                      StructuredRel, RelationshipTo, RelationshipFrom, config)
 
 # from env var, example: "bolt://neo4j:test@localhost:7687"
@@ -32,17 +32,20 @@ class ActorAndDirector(Actor, Director):
 
 class Title(StructuredNode):
     #uid = UniqueIdProperty()
-    name = StringProperty(required=True)
+    name = StringProperty(required=True, index=True)
     rating = FloatProperty()
     metascore = IntegerProperty()
     votes = IntegerProperty()
     actors = RelationshipFrom("Actor", "ACTED_IN", model=ActedIn)
 
 class Movie(Title):
-    year = IntegerProperty(required=True)
+    year = IntegerProperty(required=True, index=True)
+    length = IntegerProperty()
+    certificate = StringProperty()
+    genre = ArrayProperty()
     director = RelationshipFrom("Director", "DIRECTED", model=Directed)
 
 class Show(Title):
-    year_start = IntegerProperty(required=True)
+    year_start = IntegerProperty(required=True, index=True)
     year_end = IntegerProperty()
     creator = RelationshipFrom("Director", "CREATED", model=Created)

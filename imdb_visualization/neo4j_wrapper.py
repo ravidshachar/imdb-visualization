@@ -4,10 +4,12 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from tqdm import tqdm
 from neomodel import db
 import traceback
+import pandas as pd
+import json
 
-MOVIE_PROPERTIES = ["name", "year", "rating", "metascore", "votes"]
+MOVIE_PROPERTIES = ["name", "year", "rating", "metascore", "votes", "length", "certificate", "genre"]
 
-def insert_from_imdb(pages_number=5,years=[str(i) for i in range(2000,2021)]):
+def insert_from_imdb(pages_number=2,years=[str(i) for i in range(2000,2021)]):
     df = get_movie_dataframe(pages_number=pages_number, years=years)
     records = df.to_dict("records")
     movies = []
@@ -57,3 +59,8 @@ def insert_record_to_neo4j(record):
         print(traceback.print_exc())
         print("{}\n{}\n{}\n".format(movie_dict, actors_dict, director_dict))
         print("{}\n{}\n{}\n".format(movie, actors, director))
+
+def get_nodes_by_years(year_start, year_end):
+    df = pd.DataFrame([json.loads(json.dumps(m.__properties__)) for m in Movie.nodes.filter(year__gte=year_start).filter(year__lte=year_end)])
+    df.set_index("id", inplace=True)
+    return df
