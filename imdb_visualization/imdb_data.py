@@ -8,9 +8,9 @@ HEADERS = {"Accept-Language": "en-US, en;q=0.5"}
 NUMBER_OF_REQUESTS = 3
 RESULTS_IN_A_PAGE = 50
 
-def get_movie_dataframe(pages_number=5,years=[str(i) for i in range(2000,2018)]):
+def get_movie_dataframe(pages_number=2,years=[str(i) for i in range(2000,2002)]):
 	record_lists = []
-	pages = [i for i in range(1,pages_number)]
+	pages = [i for i in range(1,pages_number+1)]
 
 	# Preparing the monitoring of the loop
 	start_time = time()
@@ -41,9 +41,9 @@ def get_movie_dataframe(pages_number=5,years=[str(i) for i in range(2000,2018)])
 				print('Request: {}; Status code: {}'.format(requests_num, response.status_code))
 
 			# Break the loop if the number of requests is greater than expected
-			if requests_num > NUMBER_OF_REQUESTS:
-				print('Number of requests was greater than expected.')
-				break
+			#if requests_num > NUMBER_OF_REQUESTS:
+			#	print('Number of requests was greater than expected.')
+			#	break
 			
 			# Parse the content of the request with BeautifulSoup
 			page_html = BeautifulSoup(response.text, 'html.parser')
@@ -93,8 +93,8 @@ def get_movie_dataframe(pages_number=5,years=[str(i) for i in range(2000,2018)])
 					#prepre for data frame
 					record_lists.append([name,movie_year,imdb,m_score,vote,director,actors,certificate,length,genre])
 					
-		if requests_num > NUMBER_OF_REQUESTS:
-			break
+		#if requests_num > NUMBER_OF_REQUESTS:
+		#	break
 	df = pd.DataFrame(record_lists,columns=["name","year","rating","metascore","votes","director","actors","certificate","length","genre"])
 	return df
 	
