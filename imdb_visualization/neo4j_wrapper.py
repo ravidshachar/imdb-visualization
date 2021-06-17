@@ -14,8 +14,6 @@ def insert_from_imdb(pages_number=2,years=[str(i) for i in range(2000,2021)]):
     movies = []
     actors = []
     directors = []
-    #with ThreadPoolExecutor(max_workers=4) as ex:
-    #    results = list(tqdm(ex.map(insert_record_to_neo4j, records), total=len(records)))
     for record in tqdm(records):
         insert_record_to_neo4j(record)
 
@@ -83,3 +81,12 @@ def get_top_directors(year_start, year_end, top_num=10):
     df = pd.DataFrame(results, columns=["id", "name", "movies_num", "avg_movie_rating", "avg_metascore"])
     df.set_index("id", inplace=True)
     return df
+
+def get_actor_couples(top_num=10, order_by="acted_together"):
+    results, _ = db.cypher_query("""MATCH (a1:Actor)-[rs:ACTED_IN*2]-(a2:Actor)
+                                   WHERE a1.name < a2.name
+                                   WITH a1.name AS actor1, a2.name AS actor2, count(rs) AS acted_together
+                                   MATCH (a1:Actor {{name: actor1}})-[rs:ACTED_IN*4]-(a2:Actor {{name: actor2}})
+                                   RETURN actor1, actor2, acted_together, count(rs) AS acted_connection
+                                   ORDER BY {} DESC LIMIT {}""".format(order_by, top_num))
+    return pd.DataFrame(results, columns=["actor1", "actor2", "acted_together", "acted_connection"])
