@@ -1,6 +1,5 @@
 from .models import *
 from .imdb_data import get_movie_dataframe
-from concurrent.futures import ThreadPoolExecutor, as_completed
 from tqdm import tqdm
 from neomodel import db
 import traceback
@@ -62,5 +61,23 @@ def insert_record_to_neo4j(record):
 
 def get_nodes_by_years(year_start, year_end):
     df = pd.DataFrame([json.loads(json.dumps(m.__properties__)) for m in Movie.nodes.filter(year__gte=year_start).filter(year__lte=year_end)])
+    df.set_index("id", inplace=True)
+    return df
+
+def get_top_actors(top_num=10):
+    results, _ = db.cypher_query("""MATCH (a:Actor)-[rs:ACTED_IN]->(m) 
+                                    WITH a, count(m) AS movies_num, avg(m.rating) AS avg_rating, avg(m.metascore) AS avg_metascore
+                                    RETURN id(a), a.name, movies_num, avg_rating, avg_metascore
+                                    ORDER BY movies_num DESC LIMIT {}""".format(top_num))
+    df = pd.DataFrame(results, columns=["id", "name", "movies_num", "avg_movie_rating", "avg_metascore"])
+    df.set_index("id", inplace=True)
+    return df
+
+def get_top_directors(top_num=10):
+    results, _ = db.cypher_query("""MATCH (d:Director)-[rs:DIRECTED]->(m) 
+                                    WITH d, count(m) AS movies_num, avg(m.rating) AS avg_rating, avg(m.metascore) AS avg_metascore
+                                    RETURN id(d), d.name, movies_num, avg_rating, avg_metascore
+                                    ORDER BY movies_num DESC LIMIT {}""".format(top_num))
+    df = pd.DataFrame(results, columns=["id", "name", "movies_num", "avg_movie_rating", "avg_metascore"])
     df.set_index("id", inplace=True)
     return df
